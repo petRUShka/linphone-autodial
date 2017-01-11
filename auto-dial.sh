@@ -2,7 +2,6 @@
 
 CALL_RECIPIENT=$1
 SLEEP_INTERVAL=${2:-2} 
-echo $SLEEP_INTERVAL
 
 if [ -z "$CALL_RECIPIENT" ]
 then

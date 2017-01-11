@@ -1,7 +1,16 @@
 #!/bin/sh
 
-CALL_RECIPIENT=$@
-SLEEP_INTERVAL=2
+CALL_RECIPIENT=$1
+SLEEP_INTERVAL=${2:-2} 
+echo $SLEEP_INTERVAL
+
+if [ -z "$CALL_RECIPIENT" ]
+then
+    echo "You should set call recipient"
+    echo "$0 <call recipient> <sleep interval>"
+
+    exit 0
+fi
 
 for prog_name in linphone linphonec linphonecsh
 do

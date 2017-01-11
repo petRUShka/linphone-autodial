@@ -1,12 +1,11 @@
 #!/bin/sh
 
-CALL_RECIPIENT=$1
-SLEEP_INTERVAL=${2:-2} 
+SLEEP_INTERVAL=${SLEEP_INTERVAL:-2} 
 
-if [ -z "$CALL_RECIPIENT" ]
+if [ -z "$@" ]
 then
     echo "You should set call recipient"
-    echo "$0 <call recipient> <sleep interval>"
+    echo "SLEEP_INTERVAL=<pause between attempts in seconds> $0 <call recipient>"
 
     exit 0
 fi
@@ -55,10 +54,17 @@ trap interrupt INT
 
 while true
 do
-    if [ "$(linphonecsh generic calls)" = 'No active call.' ]
-    then
-        CALL_ID=$(linphonecsh dial $CALL_RECIPIENT | awk '/Call/ {print $2}')
-        echo "Calling with call id $CALL_ID"
-        sleep $SLEEP_INTERVAL
-    fi
+    for CALL_RECIPIENT in "$@"
+    do
+        ACTIVE_CALLS=$(linphonecsh generic calls | tail -1)
+        if [ "$ACTIVE_CALLS" = 'No active call.' ]
+        then
+            CALL_ID=$(linphonecsh dial $CALL_RECIPIENT | awk '/Call/ {print $2}')
+            echo "Calling to $CALL_RECIPIENT with call id $CALL_ID"
+            sleep $SLEEP_INTERVAL
+        else
+            printf "\r%s" "$ACTIVE_CALLS"
+            sleep $SLEEP_INTERVAL
+        fi
+    done
 done

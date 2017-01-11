@@ -1,5 +1,8 @@
 #!/bin/sh
 
+CALL_RECIPIENT=$@
+SLEEP_INTERVAL=2
+
 for prog_name in linphone linphonec linphonecsh
 do
     hash ${prog_name} 2>/dev/null || { echo >&2 "I require ${prog_name} but it's not installed. Visit http://www.linphone.org/ . Aborting."; exit 1; }
@@ -24,3 +27,30 @@ then
 else
     echo $REGISTER_STATUS
 fi
+
+function interrupt {
+    ACTIVE_CALLS=$(linphonecsh generic calls)
+    if [ "$ACTIVE_CALLS" == 'No active call.' ]
+    then
+        echo "No active call, exititing..."
+        exit 1
+    else
+        echo "$ACTIVE_CALLS"
+        echo "Terminate call with ID: $CALL_ID"
+        linphonecsh generic terminate $CALL_ID
+        exit 1
+    fi
+
+}
+
+trap interrupt INT
+
+while true
+do
+    if [ "$(linphonecsh generic calls)" = 'No active call.' ]
+    then
+        CALL_ID=$(linphonecsh dial $CALL_RECIPIENT | awk '/Call/ {print $2}')
+        echo "Calling with call id $CALL_ID"
+        sleep $SLEEP_INTERVAL
+    fi
+done
